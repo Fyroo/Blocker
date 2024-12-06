@@ -5,12 +5,7 @@ Here’s a polished and visually appealing `README.md` for your GitHub repositor
 
 ## Getting Started
 
-Before diving into the project, ensure you have your virtual environment activated. Then, run the following command to install all the necessary dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-````
+Before diving into the project, ensure you have your virtual environment activated. Then, run the following command to install all the necessary dependencies
 
 ## 🚀 Features
 
@@ -56,4 +51,4 @@ blocker/
 ---
 
 Happy Coding! ✨
-
+````
