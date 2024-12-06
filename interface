@@ -1,0 +1,49 @@
+import tkinter as tk
+from tkinter import ttk
+
+should_we_stop = False  # Global variable to control sniffing state
+
+def start_button():
+    global should_we_stop
+    subdomain = subdomain_entry.get()  # Get the input from the entry widget
+    if subdomain:  # Check if a subdomain is entered
+        print(f'Start sniffing on subdomain: {subdomain}')
+        should_we_stop = False
+        # Add subdomain as an entry in the treeview
+        treev.insert("", "end", text=subdomain)
+    else:
+        print("No subdomain entered")
+
+def stop_button():
+    global should_we_stop
+    print('Stop button clicked')
+    should_we_stop = True
+    # You could add more logic here to stop the sniffing process
+    print("Sniffing stopped")
+
+root = tk.Tk()
+root.geometry('500x500')
+root.title('Wittcode\'s Packet Analyzer')
+
+tk.Label(root, text='Wittcode\'s Packet Sniffer', font="Helvetica 24 bold").pack()
+tk.Label(root, text='Enter an IP subdomain', font="Helvetica 16 bold").pack()
+
+# Entry widget for subdomain input
+subdomain_entry = tk.Entry(root)
+subdomain_entry.pack(ipady=5, ipadx=50, pady=10)
+
+# Treeview widget to display subdomains
+treev = ttk.Treeview(root, height=10, columns=("Subdomain"))
+treev.heading('#0', text='ID')
+treev.heading("Subdomain", text="Subdomain")
+treev.column("#0", width=50)
+treev.column("Subdomain", width=200)
+treev.pack(pady=10)
+
+# Button frame with start and stop buttons
+button_frame = tk.Frame(root)
+tk.Button(button_frame, text="Start Sniffing", command=start_button, width=15, font="Helvetica 16 bold").pack(side=tk.LEFT, padx=10)
+tk.Button(button_frame, text="Stop Sniffing", command=stop_button, width=15, font="Helvetica 16 bold").pack(side=tk.LEFT, padx=10)
+button_frame.pack(side=tk.BOTTOM, pady=10)
+
+root.mainloop()
