@@ -1,4 +1,4 @@
-Here’s a polished and visually appealing `README.md` for your GitHub repository:
+
 
 ````markdown
 # 🛑 Blocker
