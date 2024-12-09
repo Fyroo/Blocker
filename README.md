@@ -1,11 +1,9 @@
-
-
 ````markdown
 # 🛑 Blocker
 
 ## Getting Started
 
-Before diving into the project, ensure you have your virtual environment activated. Then, run the following command to install all the necessary dependencies
+Before diving into the project, ensure you have your virtual environment activated. Then, run the following command to install all the necessary dependencies.
 
 ## 🚀 Features
 
@@ -23,6 +21,8 @@ Before diving into the project, ensure you have your virtual environment activat
    ```bash
    git clone https://github.com/Fyroo/Blocker.git
    ```
+````
+
 2. Navigate to the project directory:
    ```bash
    cd blocker
@@ -50,5 +50,24 @@ blocker/
 
 ---
 
+## 🛑 Known Issues
+
+### **Chrome Secure DNS Issue**
+
+If packets are not being shown in the packet sniffer, it may be caused by Chrome's Secure DNS feature. Disabling Secure DNS in Chrome can resolve this issue.
+
+To disable Secure DNS in Chrome:
+
+1. Open Chrome settings (`chrome://settings/`).
+2. Scroll to **Privacy and security**.
+3. Under **Security**, toggle off **Use secure DNS**.
+
+This will allow the packet sniffer to capture packets correctly.
+
+---
+
 Happy Coding! ✨
-````
+
+```
+
+```

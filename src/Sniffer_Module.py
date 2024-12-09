@@ -1,30 +1,28 @@
 from scapy.all import *
+import socket
 
-# Fonction qui sera appelée pour chaque paquet capturé
-def procPacket(p):
-    # Vérifier si la couche Ethernet, IP et UDP sont présentes
-    if p.haslayer(Ether) and p.haslayer(IP) and p.haslayer(UDP):
-        eth_layer = p.getlayer(Ether)
-        src_mac, dst_mac = (eth_layer.src, eth_layer.dst)
-        
+def resolve_domain(ip):
+    try:
+        return socket.gethostbyaddr(ip)[0]
+    except socket.herror:
+        return "Unknown"
+
+def procPacket(p, queue):
+    if p.haslayer(IP) and p.haslayer(UDP) and p.haslayer(DNS) and p.haslayer(DNSQR):
         ip_layer = p.getlayer(IP)
-        src_ip, dst_ip = (ip_layer.src, ip_layer.dst)
-        
-        udp_layer = p.getlayer(UDP)
-        src_port, dst_port = (udp_layer.sport, udp_layer.dport)
-        
-        # Affichage des informations
-        print(f"Ethernet Layer: Src MAC: {src_mac}, Dst MAC: {dst_mac}")
-        print(f"IP Layer: Src IP: {src_ip}, Dst IP: {dst_ip}")
-        print(f"UDP Layer: Src Port: {src_port}, Dst Port: {dst_port}")
-        
-        # Réaction spécifique si le paquet concerne le port 53 (DNS)
-        if src_port == 53 or dst_port == 53:
-            print("DNS packet detected (port 53)!")
+        dns_layer = p.getlayer(DNS)
+        dns_query = dns_layer.qd.qname.decode('utf-8')  
 
-# Capturer des paquets UDP sur le port 53
-p = sniff( filter="udp port 53", prn=procPacket)
+        data = {
+            "domain_ip": ip_layer.dst,  
+            "domain_name": dns_query,  
+        }
+        queue.put(data)  
 
-# Afficher les informations du premier paquet capturé
-if p:  # Si un paquet a été capturé
-    p.show()  # Afficher les détails du premier paquet capturé
+def start_sniffing(queue, stop_event, selected_interface):
+    sniff(
+        iface=selected_interface,  
+        filter="udp port 53",
+        prn=lambda p: procPacket(p, queue),
+        stop_filter=lambda x: stop_event.is_set()
+    )
