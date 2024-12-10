@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import threading
 from queue import Queue
-from sniffer_module import start_sniffing
+from Sniffer_Module import start_sniffing
 from interface_list_module import list_interfaces  
 from threading import Event
 
@@ -15,7 +15,6 @@ class PacketSnifferApp:
         self.should_we_stop = Event()
         self.packet_queue = Queue()
         
-        # Apply styles
         style = ttk.Style()
         style.theme_use('clam')
         style.configure("Treeview", font=('Helvetica', 12), rowheight=25)
@@ -26,7 +25,6 @@ class PacketSnifferApp:
         header_label = ttk.Label(root, text='Packet Sniffer', style="Title.TLabel")
         header_label.pack(pady=10)
 
-        # Dropdown for network interfaces
         self.interface_label = ttk.Label(root, text="Select Network Interface:", font=('Helvetica', 12))
         self.interface_label.pack(pady=5)
 

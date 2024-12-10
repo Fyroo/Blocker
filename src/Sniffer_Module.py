@@ -1,11 +1,5 @@
 from scapy.all import *
-import socket
 
-def resolve_domain(ip):
-    try:
-        return socket.gethostbyaddr(ip)[0]
-    except socket.herror:
-        return "Unknown"
 
 def procPacket(p, queue):
     if p.haslayer(IP) and p.haslayer(UDP) and p.haslayer(DNS) and p.haslayer(DNSQR):
