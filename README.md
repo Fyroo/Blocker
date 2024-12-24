@@ -67,7 +67,3 @@ This will allow the packet sniffer to capture packets correctly.
 ---
 
 Happy Coding! ✨
-
-```
-
-```
