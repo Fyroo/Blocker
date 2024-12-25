@@ -1,67 +1,99 @@
-````markdown
-# 🛑 Blocker
+# 🛑 Blocker - DNS Blocker Server
 
-## Getting Started
+## Overview
 
-Before diving into the project, ensure you have your virtual environment activated. Then, run the following command to install all the necessary dependencies.
+**Blocker** is a DNS server designed to block specific domains (e.g., ads, malware, adult content) by redirecting them to a local address (e.g., `127.0.0.1`). The server allows you to maintain a custom blocklist and provides fallback resolution via upstream DNS servers like Google DNS when the domain is not blocked. This is particularly useful for network filtering, parental control, and privacy enhancement.
 
-## 🚀 Features
+## Prerequisites
 
-- **Dependency Management**: Easily set up all required libraries with `requirements.txt`.
-- **Fast Start**: Get started with minimal setup steps.
+Before you start, ensure that your environment is ready:
 
-## 🛠 Prerequisites
+- **Python**: Python 3.x is required.
+- **Virtual Environment**: It is recommended to use a virtual environment for dependency management.
 
-- **Python**: Ensure Python 3.x is installed on your machine.
-- **Virtual Environment**: It’s recommended to use a virtual environment to manage dependencies.
+## Installation and Setup
 
-## 🔧 How to Run
+### 1. Clone the Repository
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Fyroo/Blocker.git
-   ```
+```bash
+git clone https://github.com/Fyroo/Blocker.git
+cd blocker
+```
+
 ````
 
-2. Navigate to the project directory:
-   ```bash
-   cd blocker
-   ```
-3. Create and activate a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # For Linux/Mac
-   venv\Scripts\activate     # For Windows
-   ```
-4. Install the dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### 2. Set Up a Virtual Environment
 
-## 📂 Project Structure
+Create and activate a virtual environment to manage your dependencies:
+
+```bash
+python -m venv venv
+```
+
+- For Linux/macOS:
+
+```bash
+source venv/bin/activate
+```
+
+- For Windows:
+
+```bash
+venv\Scripts\activate
+```
+
+### 3. Install Dependencies
+
+Install the required libraries using `pip`:
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure the Blocklist
+
+The server uses a `nsfw_domains.txt` file to maintain the list of domains to block. You can find this file under the `data` directory.
+
+Each domain should be listed on a separate line. The server will check incoming DNS queries against this list and block matching domains.
+
+### 5. Run the DNS Server
+
+Start the DNS server by running the following command:
+
+```bash
+python blocker/dns_server.py
+```
+
+The server will start listening on `127.0.0.1:53` and will block any domains listed in `domains.txt`. Any other domains will be forwarded to the configured upstream DNS server (Google DNS by default: `8.8.8.8`).
+
+## Project Structure
 
 ```
 blocker/
-├── requirements.txt  # Dependency file
-├── blocker/          # Source code
-├── README.md         # Project documentation
+├── requirements.txt             # Dependency file
+├── blocker/                     # Source code
+│   ├── dns_server.py            # Main DNS server logic
+├── data/                        # Directory containing blocklist
+│   └── *_domains.txt         # List of domains to block
+├── README.md                    # Project documentation
 └── ...
 ```
 
----
+## How It Works
 
-## 🛑 Known Issues
+1. **Domain Query**: When a DNS query is received, the server checks if the requested domain matches any in the blocklist (`*_domains.txt`).
+2. **Block Domain**: If the domain is found in the blocklist, the server responds with the IP `127.0.0.1`, effectively blocking the domain.
+3. **Forward to Upstream DNS**: If the domain is not in the blocklist, the server forwards the query to the configured upstream DNS server (e.g., `8.8.8.8`).
+
+## Known Issues
 
 ### **Chrome Secure DNS Issue**
 
-If packets are not being shown in the packet sniffer, it may be caused by Chrome's Secure DNS feature. Disabling Secure DNS in Chrome can resolve this issue.
-
-To disable Secure DNS in Chrome:
+If the server is not capturing DNS queries from Chrome, it may be due to Chrome's Secure DNS feature. To fix this:
 
 1. Open Chrome settings (`chrome://settings/`).
 2. Scroll to **Privacy and security**.
 3. Under **Security**, toggle off **Use secure DNS**.
 
-This will allow the packet sniffer to capture packets correctly.
-
----
+Disabling Secure DNS will allow the packet sniffer to capture packets properly.
+````
