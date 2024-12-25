@@ -65,5 +65,3 @@ To disable Secure DNS in Chrome:
 This will allow the packet sniffer to capture packets correctly.
 
 ---
-
-Happy Coding! ✨
