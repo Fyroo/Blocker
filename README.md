@@ -1,3 +1,5 @@
+````markdown
+
 # 🛑 Blocker - DNS Blocker Server
 
 ## Overview
