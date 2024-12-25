@@ -98,4 +98,3 @@ If the server is not capturing DNS queries from Chrome, it may be due to Chrome'
 3. Under **Security**, toggle off **Use secure DNS**.
 
 Disabling Secure DNS will allow the packet sniffer to capture packets properly.
-````
