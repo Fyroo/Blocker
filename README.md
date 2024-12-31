@@ -1,5 +1,4 @@
 ````markdown
-
 # 🛑 Blocker - DNS Blocker Server
 
 ## Overview
@@ -21,7 +20,6 @@ Before you start, ensure that your environment is ready:
 git clone https://github.com/Fyroo/Blocker.git
 cd blocker
 ```
-
 ````
 
 ### 2. Set Up a Virtual Environment
@@ -76,7 +74,7 @@ blocker/
 ├── blocker/                     # Source code
 │   ├── dns_server.py            # Main DNS server logic
 ├── data/                        # Directory containing blocklist
-│   └── *_domains.txt         # List of domains to block
+│   └── *_domains.txt            # List of domains to block
 ├── README.md                    # Project documentation
 └── ...
 ```
