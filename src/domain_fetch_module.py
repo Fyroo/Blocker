@@ -1,38 +1,49 @@
 import requests
 import os
+import time
 
-def fetch_domains():
-    url_ads = "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/multi.txt"
-    url_nsfw = "https://nsfw.oisd.nl/simplednsplusdblpi"
-    
-    try:
-        data_directory = os.path.join("Blocker", "data") 
-        os.makedirs(data_directory, exist_ok=True)  
+class DomainUpdater:
+    def __init__(self, auto_update=True):
+        self.auto_update = auto_update
+        self.data_directory = os.path.join("Blocker", "data")
+        os.makedirs(self.data_directory, exist_ok=True)
 
-        response_ads = requests.get(url_ads)
-        response_ads.raise_for_status()  
-        response_nsfw = requests.get(url_nsfw)
-        response_nsfw.raise_for_status()  
+        self.ads_url = "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/multi.txt"
+        self.nsfw_url = "https://nsfw.oisd.nl/simplednsplusdblpi"
 
-        ads_ads = response_ads.text.splitlines()                        
-        nsfw_list = response_nsfw.text.splitlines()
+    def fetch_domains(self):
+        """Fetch and save domain block lists."""
+        try:
+            # Fetch Ads blocklist
+            response_ads = requests.get(self.ads_url, timeout=10)
+            response_ads.raise_for_status()
 
-        ads_ads = [line for line in ads_ads if line and not line.startswith("#")]
-        nsfw_list = [line.split(" ", 1)[1] for line in nsfw_list if line.startswith("E ") and not line.startswith("#")]
+            # Fetch NSFW blocklist
+            response_nsfw = requests.get(self.nsfw_url, timeout=10)
+            response_nsfw.raise_for_status()
 
-        ads_domains_file = os.path.join(data_directory, "ads_domains.txt")
-        nsfw_list_file = os.path.join(data_directory, "nsfw_domains.txt")
-        
-        with open(nsfw_list_file, "w") as file:
-            for domain in nsfw_list:
-                file.write(f"{domain}\n")
-        
-        with open(ads_domains_file, "w") as file:
-            for domain in ads_ads:
-                file.write(f"{domain}\n")
-        
-    except requests.RequestException as e:
-        print(f"Error fetching domain list: {e}")
+            ads_list = response_ads.text.splitlines()
+            nsfw_list = [line.split(" ", 1)[1] for line in response_nsfw.text.splitlines()
+                         if line.startswith("E ") and not line.startswith("#")]
 
+            # Save Ads domains
+            ads_file = os.path.join(self.data_directory, "ads_domains.txt")
+            with open(ads_file, "w") as file:
+                file.writelines(f"{domain}\n" for domain in ads_list if domain and not domain.startswith("#"))
 
-fetch_domains()
+            # Save NSFW domains
+            nsfw_file = os.path.join(self.data_directory, "nsfw_domains.txt")
+            with open(nsfw_file, "w") as file:
+                file.writelines(f"{domain}\n" for domain in nsfw_list)
+
+            print("Domain lists updated successfully.")
+
+        except requests.RequestException as e:
+            print(f"Error fetching domain lists: {e}")
+
+    def update_loop(self):
+        """Run update loop every 2 hours."""
+        while self.auto_update:
+            print("Updating domain lists...")
+            self.fetch_domains()
+            time.sleep(60*60*2)  
