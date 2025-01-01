@@ -3,3 +3,4 @@ tk
 scapy
 requests
 dnslib
+matplotlib
