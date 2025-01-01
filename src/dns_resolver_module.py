@@ -2,31 +2,51 @@ import socket
 import dnslib
 import threading
 from datetime import datetime
+from configuration_module import ConfigHandler
 import os
 import json
 
 class DNSServer:
-    def __init__(self, upstream_dns="8.8.8.8", save_file="Blocker/data/block_counts.json"):
-        self.upstream_dns = upstream_dns
-        self.blocked_domains = set()
+    def __init__(self, config_handler: ConfigHandler, save_file="Blocker/data/block_counts.json"):
+        self.config_handler = config_handler
+        #self.upstream_dns = self.config_handler.config.get("upstream_dns.address", "8.8.8.8")
+        #self.whitelist = set(self.config_handler.config.get("whitelist", []))
+        #self.blacklist = set(self.config_handler.config.get("blacklist", []))
+        self.lastqname = None
+
+    
+        self.config_file="Blocker/data/config.json"
+        try:
+            with open(self.config_file, 'r') as f:
+                self.config = json.load(f)
+                self.whitelist = set(self.config.get("whitelist", [])) 
+                self.blacklist = set(self.config.get("blacklist", [])) 
+                self.upstream_dns = self.config.get("upstream_dns", {}).get("address", "8.8.8.8")
+                #self.dns_name = self.config.upstream_dns.get("name","Google")
+                print(f"Loaded configuration: {self.config}")
+        except Exception as e:
+            print(f"Error loading configuration: {e}")
+            self.config = {}
+
+
+
+        self.blocked_domains = self.blacklist.copy()
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(('127.0.0.1', 53))
-        self.blocklist_files = {}
-
-        # Block counters
+        self.blocklist_files = {
+        "ADS": "Blocker/data/ads_domains.txt",
+        "NSFW": "Blocker/data/nsfw_domains.txt",
+        }
         self.daily_blocks = 0
         self.monthly_blocks = 0
         self.last_reset_date = datetime.now()
 
-        # File to save block counts
         self.save_file = save_file
-        self.blocking_enabled = False  # Initially, blocking is off
+        self.blocking_enabled = False  
 
-        # Load previous counts
         self.load_counts()
 
     def load_counts(self):
-        """Load the daily and monthly block counts from a file."""
         if os.path.exists(self.save_file):
             try:
                 with open(self.save_file, 'r') as f:
@@ -38,7 +58,6 @@ class DNSServer:
                 print(f"Error loading block counts: {e}")
 
     def save_counts(self):
-        """Save the daily and monthly block counts to a file."""
         try:
             data = {
                 'daily_blocks': self.daily_blocks,
@@ -67,15 +86,18 @@ class DNSServer:
         return blocklist
 
     def update_blocklist(self, categories):
-        """Update the blocked domains based on selected categories."""
         self.blocked_domains.clear()
         for category, file_path in self.blocklist_files.items():
             if category in categories:
-                self.blocked_domains.update(self.load_blocklist(file_path))
-        print(f"Blocking {len(self.blocked_domains)} domains.")
+                blocklist = self.load_blocklist(file_path)
+                if blocklist:
+                    self.blocked_domains.update(blocklist)
+                else:
+                    print(f"No domains loaded for category: {category}")
+        print(f"Total domains to block: {len(self.blocked_domains)}")
+
 
     def reset_counters_if_needed(self):
-        """Reset daily and monthly counters if needed."""
         now = datetime.now()
         if now.date() != self.last_reset_date.date():
             self.daily_blocks = 0
@@ -84,22 +106,23 @@ class DNSServer:
         self.last_reset_date = now
 
     def resolve_dns(self, query):
-        """Resolve DNS query or block it based on the blocklist."""
         self.reset_counters_if_needed()
 
         qname = str(query.q.qname).rstrip('.')
         qname = qname.removeprefix('www.')
         print(f"Received query: {qname}")
-        if qname in self.blocked_domains and self.blocking_enabled:
-            # Increment counters
-            self.daily_blocks += 1
-            self.monthly_blocks += 1
-            print(f"Blocked domain: {qname}")
 
-            # Save counts after blocking a domain
+        if qname in self.whitelist:
+            print(f"Domain whitelisted: {qname}")
+            return self.forward_query(query)    
+
+        if qname in self.blocked_domains and self.blocking_enabled:
+            if self.lastqname != qname:
+                self.daily_blocks += 1
+                self.monthly_blocks += 1
+            print(f"Blocked domain: {qname}")
             self.save_counts()
 
-            # Create response pointing to localhost
             response = dnslib.DNSRecord(
                 dnslib.DNSHeader(id=query.header.id, qr=1, aa=1, ra=1),
                 q=query.q
@@ -113,9 +136,12 @@ class DNSServer:
                     rdata=dnslib.A("127.0.0.1")
                 )
             )
+            self.lastqname = qname
             return response
+        print(f"resloved domain with : {self.upstream_dns}")
+        return self.forward_query(query)
 
-        # Resolve the DNS query via the upstream DNS (8.8.8.8)
+    def forward_query(self, query):
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             sock.settimeout(5)
@@ -123,13 +149,12 @@ class DNSServer:
             data, _ = sock.recvfrom(4096)
             return dnslib.DNSRecord.parse(data)
         except Exception as e:
-            print(f"Error resolving {qname}: {e}")
+            print(f"Error forwarding query: {e}")
             return None
         finally:
             sock.close()
 
     def handle_request(self, data, addr):
-        """Handle incoming DNS request."""
         try:
             query = dnslib.DNSRecord.parse(data)
             response = self.resolve_dns(query)
@@ -139,7 +164,6 @@ class DNSServer:
             print(f"Error handling request: {e}")
 
     def run(self):
-        """Run the DNS server."""
         print(f"DNS Server running on 127.0.0.1:53")
         print(f"Blocking {len(self.blocked_domains)} domains.")
 

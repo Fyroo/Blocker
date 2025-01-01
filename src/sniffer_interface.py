@@ -2,15 +2,15 @@ import tkinter as tk
 from tkinter import ttk
 import threading
 from queue import Queue
-from Sniffer_Module import start_sniffing
+from sniffer_module import start_sniffing
 from interface_list_module import list_interfaces  
 from threading import Event
 
 class PacketSnifferApp:
     def __init__(self, root):
         self.root = root
-        self.root.geometry('600x600')
-        self.root.title('Packet Analyzer')
+        label = tk.Label(root, text="Packet Sniffer",font=("Arial", 16, "bold"))
+        label.pack()
         
         self.should_we_stop = Event()
         self.packet_queue = Queue()

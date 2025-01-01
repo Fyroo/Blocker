@@ -1,23 +1,68 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import threading
-from blocker_interface import DomainBlockerApp
+from dns_resolver_interface import DomainBlockerApp
 from sniffer_interface import PacketSnifferApp
 from domain_fetch_module import DomainUpdater
+from configuration_module import ConfigHandler
+from configuration_interface import ConfigurationInterface
+from dns_resolver_module import DNSServer  
 
 def main():
-    # Initialize domain updater
-    domain_updater = DomainUpdater(auto_update=True)
-    update_thread = threading.Thread(target=domain_updater.update_loop, daemon=True)
-    update_thread.start()
+    config_handler = ConfigHandler()
+    
+    dns_server = DNSServer(config_handler)
+    dns_server.update_blocklist([])
 
-    # Initialize applications
+    auto_update = config_handler.config.get("auto_update", True)
+    domain_updater = DomainUpdater(auto_update=auto_update)
+
+    if auto_update:
+        update_thread = threading.Thread(target=domain_updater.update_loop, daemon=True)
+        update_thread.start()
+
     root = tk.Tk()
     root.title("Network Tools")
+    root.geometry("800x600")
 
-    # Tabs for different applications
-    notebook = ttk.Notebook(root)
+    sidebar = tk.Frame(root, width=200, bg="lightgray")
+    sidebar.pack(side="left", fill="y")
 
+    content_frame = tk.Frame(root)
+    content_frame.pack(side="right", fill="both", expand=True)
+
+    frames = {}
+
+    def switch_frame(frame_name):
+        for name, frame in frames.items():
+            frame.pack_forget()  
+        frames[frame_name].pack(fill="both", expand=True)
+
+    sniffer_frame = tk.Frame(content_frame)
+    PacketSnifferApp(sniffer_frame)  
+    frames["Packet Sniffer"] = sniffer_frame
+
+    blocker_frame = tk.Frame(content_frame)
+    DomainBlockerApp(blocker_frame, dns_server) 
+    frames["Domain Blocker"] = blocker_frame
+
+    config_frame = tk.Frame(content_frame)
+    ConfigurationInterface(config_frame, config_handler) 
+    frames["Configuration"] = config_frame
+
+    buttons = {
+        "Packet Sniffer": lambda: switch_frame("Packet Sniffer"),
+        "Domain Blocker": lambda: switch_frame("Domain Blocker"),
+        "Configuration": lambda: switch_frame("Configuration"),
+    }
+
+    for idx, (text, command) in enumerate(buttons.items()):
+        btn = tk.Button(sidebar, text=text, command=command, bg="white", fg="black")
+        btn.pack(fill="x", pady=5, padx=10)
+
+
+
+    switch_frame("Packet Sniffer")
 
     root.mainloop()
 

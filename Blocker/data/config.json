@@ -1,0 +1,12 @@
+{
+    "upstream_dns": {
+        "name": "Google",
+        "address": "8.8.8.8"
+    },
+    "custom_dns": "",
+    "whitelist": [
+        "badblood.com"
+    ],
+    "blacklist": [],
+    "auto_update": true
+}
