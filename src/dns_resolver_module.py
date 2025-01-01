@@ -5,46 +5,42 @@ from datetime import datetime
 from configuration_module import ConfigHandler
 import os
 import json
+import time
 
 class DNSServer:
-    def __init__(self, config_handler: ConfigHandler, save_file="Blocker/data/block_counts.json"):
+    def __init__(self, config_handler: ConfigHandler):
         self.config_handler = config_handler
-        #self.upstream_dns = self.config_handler.config.get("upstream_dns.address", "8.8.8.8")
-        #self.whitelist = set(self.config_handler.config.get("whitelist", []))
-        #self.blacklist = set(self.config_handler.config.get("blacklist", []))
         self.lastqname = None
-
-    
-        self.config_file="Blocker/data/config.json"
+        self.config_file = "Blocker/data/config.json"
         try:
             with open(self.config_file, 'r') as f:
                 self.config = json.load(f)
                 self.whitelist = set(self.config.get("whitelist", [])) 
                 self.blacklist = set(self.config.get("blacklist", [])) 
                 self.upstream_dns = self.config.get("upstream_dns", {}).get("address", "8.8.8.8")
-                #self.dns_name = self.config.upstream_dns.get("name","Google")
                 print(f"Loaded configuration: {self.config}")
         except Exception as e:
             print(f"Error loading configuration: {e}")
             self.config = {}
 
-
-
         self.blocked_domains = self.blacklist.copy()
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(('127.0.0.1', 53))
         self.blocklist_files = {
-        "ADS": "Blocker/data/ads_domains.txt",
-        "NSFW": "Blocker/data/nsfw_domains.txt",
+            "ADS": "Blocker/data/ads_domains.txt",
+            "NSFW": "Blocker/data/nsfw_domains.txt",
         }
         self.daily_blocks = 0
         self.monthly_blocks = 0
+        self.total_monthly_queries = 0
         self.last_reset_date = datetime.now()
 
-        self.save_file = save_file
+        self.save_file = "Blocker/data/statistics.json"
         self.blocking_enabled = False  
 
         self.load_counts()
+        self.start_saving_thread()
+        self.is_run = False
 
     def load_counts(self):
         if os.path.exists(self.save_file):
@@ -53,22 +49,23 @@ class DNSServer:
                     data = json.load(f)
                     self.daily_blocks = data.get('daily_blocks', 0)
                     self.monthly_blocks = data.get('monthly_blocks', 0)
-                    print(f"Loaded counts: Daily: {self.daily_blocks}, Monthly: {self.monthly_blocks}")
+                    self.total_monthly_queries = data.get('total_monthly_queries', 0)
+                    print(f"Loaded counts: Daily: {self.daily_blocks}, Monthly: {self.monthly_blocks}, Total Monthly Queries: {self.total_monthly_queries}")
             except Exception as e:
-                print(f"Error loading block counts: {e}")
+                print(f"Error loading statistics: {e}")
 
     def save_counts(self):
         try:
             data = {
                 'daily_blocks': self.daily_blocks,
-                'monthly_blocks': self.monthly_blocks
+                'monthly_blocks': self.monthly_blocks,
+                'total_monthly_queries': self.total_monthly_queries
             }
             with open(self.save_file, 'w') as f:
-                json.dump(data, f)
-            print(f"Saved counts: Daily: {self.daily_blocks}, Monthly: {self.monthly_blocks}")
+                json.dump(data, f, indent=4)
+            print(f"Saved counts: Daily: {self.daily_blocks}, Monthly: {self.monthly_blocks}, Total Monthly Queries: {self.total_monthly_queries}")
         except Exception as e:
-            print(f"Error saving block counts: {e}")
-
+            print(f"Error saving statistics: {e}")
     def load_blocklist(self, file_path):
         """Load blocklist from a file."""
         blocklist = set()
@@ -96,18 +93,29 @@ class DNSServer:
                     print(f"No domains loaded for category: {category}")
         print(f"Total domains to block: {len(self.blocked_domains)}")
 
+    
+    def start_saving_thread(self):
+        def save_periodically():
+            while True:
+                self.save_counts()
+                time.sleep(10)
 
-    def reset_counters_if_needed(self):
+        saving_thread = threading.Thread(target=save_periodically, daemon=True)
+        saving_thread.start()
+
+    def reset_counters(self):
         now = datetime.now()
         if now.date() != self.last_reset_date.date():
             self.daily_blocks = 0
         if now.month != self.last_reset_date.month:
             self.monthly_blocks = 0
+            self.total_monthly_queries = 0
         self.last_reset_date = now
 
     def resolve_dns(self, query):
-        self.reset_counters_if_needed()
+        self.reset_counters()
 
+        self.total_monthly_queries += 1
         qname = str(query.q.qname).rstrip('.')
         qname = qname.removeprefix('www.')
         print(f"Received query: {qname}")
@@ -121,7 +129,6 @@ class DNSServer:
                 self.daily_blocks += 1
                 self.monthly_blocks += 1
             print(f"Blocked domain: {qname}")
-            self.save_counts()
 
             response = dnslib.DNSRecord(
                 dnslib.DNSHeader(id=query.header.id, qr=1, aa=1, ra=1),
@@ -138,7 +145,7 @@ class DNSServer:
             )
             self.lastqname = qname
             return response
-        print(f"resloved domain with : {self.upstream_dns}")
+        print(f"Resolved domain with: {self.upstream_dns}")
         return self.forward_query(query)
 
     def forward_query(self, query):
@@ -166,7 +173,7 @@ class DNSServer:
     def run(self):
         print(f"DNS Server running on 127.0.0.1:53")
         print(f"Blocking {len(self.blocked_domains)} domains.")
-
+        self.is_run = True
         while True:
             try:
                 data, addr = self.sock.recvfrom(4096)

@@ -7,6 +7,7 @@ from domain_fetch_module import DomainUpdater
 from configuration_module import ConfigHandler
 from configuration_interface import ConfigurationInterface
 from dns_resolver_module import DNSServer  
+from dashboard_interface import DashboardApp
 
 def main():
     config_handler = ConfigHandler()
@@ -23,7 +24,7 @@ def main():
 
     root = tk.Tk()
     root.title("Network Tools")
-    root.geometry("800x600")
+    root.geometry("1300x700")
 
     sidebar = tk.Frame(root, width=200, bg="lightgray")
     sidebar.pack(side="left", fill="y")
@@ -38,6 +39,10 @@ def main():
             frame.pack_forget()  
         frames[frame_name].pack(fill="both", expand=True)
 
+    dashboard_frame = tk.Frame(content_frame)
+    DashboardApp(dashboard_frame, config_handler, dns_server)
+    frames["Dashboard"] = dashboard_frame
+
     sniffer_frame = tk.Frame(content_frame)
     PacketSnifferApp(sniffer_frame)  
     frames["Packet Sniffer"] = sniffer_frame
@@ -50,7 +55,10 @@ def main():
     ConfigurationInterface(config_frame, config_handler) 
     frames["Configuration"] = config_frame
 
+
+
     buttons = {
+        "Dashboard": lambda: switch_frame("Dashboard"),
         "Packet Sniffer": lambda: switch_frame("Packet Sniffer"),
         "Domain Blocker": lambda: switch_frame("Domain Blocker"),
         "Configuration": lambda: switch_frame("Configuration"),
@@ -62,7 +70,7 @@ def main():
 
 
 
-    switch_frame("Packet Sniffer")
+    switch_frame("Dashboard")
 
     root.mainloop()
 
