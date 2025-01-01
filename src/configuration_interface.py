@@ -15,8 +15,8 @@ class ConfigurationInterface:
     def __init__(self, root, config_handler):
         self.root = root
         self.config_handler = config_handler
-        label = tk.Label(self.root, text="Configuration", font=("Arial", 16, "bold"))
-        label.pack()
+        label = ttk.Label(self.root, text="Configuration", font=("Arial", 18, "bold"))
+        label.pack(pady=20)
         self.DomainUpdater = DomainUpdater()
         self.auto_update = tk.BooleanVar(value=self.config_handler.config.get("auto_update", True))
         self.upstream_dns_name = tk.StringVar(value=self.config_handler.config["upstream_dns"]["name"])
@@ -28,40 +28,47 @@ class ConfigurationInterface:
         self.create_ui()
 
     def create_ui(self):
+        # Upstream DNS Provider Section
         ttk.Label(self.root, text="Select Upstream DNS Provider:", font=("Arial", 12)).pack(pady=5)
 
         self.provider_menu = ttk.Combobox(self.root, values=self.providers_names, textvariable=self.upstream_dns_name, state="readonly")
-        self.provider_menu.pack(pady=5)
+        self.provider_menu.pack(pady=5, fill=tk.X, padx=20)
 
+        # Custom DNS Entry
         self.custom_dns_frame = ttk.Frame(self.root)
-        self.custom_dns_frame.pack(pady=5, fill=tk.X)
+        self.custom_dns_frame.pack(pady=10, fill=tk.X, padx=20)
         ttk.Label(self.custom_dns_frame, text="Custom DNS Server:", font=("Arial", 12)).pack(side=tk.LEFT, padx=5)
         self.custom_dns_entry = ttk.Entry(self.custom_dns_frame, textvariable=self.custom_dns, state="disabled")
         self.custom_dns_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
 
+        # Update Custom DNS Entry State
         self.upstream_dns_name.trace("w", self.toggle_custom_dns)
 
+        # Whitelist Section
         ttk.Label(self.root, text="Whitelist Domains:", font=("Arial", 12)).pack(pady=5)
         self.whitelist_box = tk.Listbox(self.root, height=5)
-        self.whitelist_box.pack(pady=5, fill=tk.X)
+        self.whitelist_box.pack(pady=5, fill=tk.X, padx=20)
         self.populate_listbox(self.whitelist_box, self.whitelist)
         self.create_list_controls(self.whitelist_box, "whitelist")
 
+        # Blacklist Section
         ttk.Label(self.root, text="Blacklist Domains:", font=("Arial", 12)).pack(pady=5)
         self.blacklist_box = tk.Listbox(self.root, height=5)
-        self.blacklist_box.pack(pady=5, fill=tk.X)
+        self.blacklist_box.pack(pady=5, fill=tk.X, padx=20)
         self.populate_listbox(self.blacklist_box, self.blacklist)
         self.create_list_controls(self.blacklist_box, "blacklist")
 
+        # Auto-update Checkbox
         self.auto_update_check = ttk.Checkbutton(self.root, text="Enable Auto-Update for Domain Lists", variable=self.auto_update)
-        self.auto_update_check.pack(pady=5)
+        self.auto_update_check.pack(pady=10)
 
-        ttk.Button(self.root, text="Update Domain List Manually", command=self.update_domain_list).pack(pady=5)
-        ttk.Button(self.root, text="Save Configuration", command=self.save_configuration).pack(pady=5)
+        # Buttons
+        ttk.Button(self.root, text="Update Domain List Manually", command=self.update_domain_list).pack(pady=10, padx=20, fill=tk.X)
+        ttk.Button(self.root, text="Save Configuration", command=self.save_configuration).pack(pady=10, padx=20, fill=tk.X)
 
     def create_list_controls(self, listbox, key):
         frame = ttk.Frame(self.root)
-        frame.pack(pady=5, fill=tk.X)
+        frame.pack(pady=5, fill=tk.X, padx=20)
 
         entry = ttk.Entry(frame)
         entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
@@ -104,7 +111,6 @@ class ConfigurationInterface:
 
         messagebox.showinfo("Save", "Configuration saved successfully!")
 
-
     def update_domain_list(self):
         try:
             self.DomainUpdater.fetch_domains()
@@ -119,14 +125,5 @@ if __name__ == "__main__":
     root = tk.Tk()
     config_handler = ConfigHandler()
     app = ConfigurationInterface(root, config_handler)
-    root.mainloop()
-
-
-
-if __name__ == "__main__":
-    from config_handler import ConfigHandler
-
-    root = tk.Tk()
-    config_handler = ConfigHandler()
-    app = ConfigurationInterface(root, config_handler)
+    root.geometry("800x600")  # Setting the window size
     root.mainloop()
