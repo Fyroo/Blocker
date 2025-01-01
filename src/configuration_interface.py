@@ -18,7 +18,7 @@ class ConfigurationInterface:
         label = tk.Label(self.root, text="Configuration", font=("Arial", 16, "bold"))
         label.pack()
         self.DomainUpdater = DomainUpdater()
-        self.auto_update = tk.BooleanVar(value=self.config_handler.config.get("auto_update", False))
+        self.auto_update = tk.BooleanVar(value=self.config_handler.config.get("auto_update", True))
         self.upstream_dns_name = tk.StringVar(value=self.config_handler.config["upstream_dns"]["name"])
         self.upstream_dns_address = tk.StringVar(value=self.config_handler.config["upstream_dns"]["address"])
         self.custom_dns = tk.StringVar(value=self.config_handler.config.get("custom_dns", ""))

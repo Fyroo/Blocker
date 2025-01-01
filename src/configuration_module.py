@@ -12,7 +12,7 @@ class ConfigHandler:
             "custom_dns": "",
             "whitelist": [],
             "blacklist": [],
-            "auto_update": False
+            "auto_update": True
         }
         self.config = self.load_config()
 
