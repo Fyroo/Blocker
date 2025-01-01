@@ -2,14 +2,15 @@ import tkinter as tk
 from tkinter import ttk
 import threading
 from queue import Queue
-from sniffer_module import start_sniffing
-from interface_list_module import list_interfaces  
 from threading import Event
+from sniffer_module import PacketSniffer  # Assuming the PacketSniffer class is in packet_sniffer.py
+from interface_list_module import list_interfaces  # If this is a custom module for listing interfaces
+
 
 class PacketSnifferApp:
     def __init__(self, root):
         self.root = root
-        label = tk.Label(root, text="Packet Sniffer",font=("Arial", 16, "bold"))
+        label = tk.Label(root, text="Live Packet View", font=("Arial", 16, "bold"))
         label.pack()
         
         self.should_we_stop = Event()
@@ -22,9 +23,6 @@ class PacketSnifferApp:
         style.configure("TButton", font=('Helvetica', 14), padding=5)
         style.configure("Title.TLabel", font=('Helvetica', 24, 'bold'), foreground="#333")
 
-        header_label = ttk.Label(root, text='Packet Sniffer', style="Title.TLabel")
-        header_label.pack(pady=10)
-
         self.interface_label = ttk.Label(root, text="Select Network Interface:", font=('Helvetica', 12))
         self.interface_label.pack(pady=5)
 
@@ -32,14 +30,15 @@ class PacketSnifferApp:
         self.interface_dropdown = ttk.Combobox(root, textvariable=self.interface_var, state="readonly", font=('Helvetica', 12))
         self.interface_dropdown.pack(pady=5)
 
-
         self.populate_interfaces()
 
-        self.treev = ttk.Treeview(root, height=10, columns=("Domain IP", "Domain Name"), show='headings')
+        self.treev = ttk.Treeview(root, height=10, columns=("Domain IP", "Domain Name", "Flag"), show='headings')
         self.treev.heading("Domain IP", text="Domain IP")
         self.treev.heading("Domain Name", text="Domain Name")
+        self.treev.heading("Flag", text="Flag")
         self.treev.column("Domain IP", width=200, anchor="center")
         self.treev.column("Domain Name", width=300, anchor="center")
+        self.treev.column("Flag", width=100, anchor="center")
         self.treev.pack(pady=10, padx=20, fill=tk.BOTH, expand=True)
 
         button_frame = ttk.Frame(root)
@@ -47,6 +46,14 @@ class PacketSnifferApp:
 
         tk.Button(button_frame, text="Start Sniffing", command=self.start_sniffing, width=15, font="Helvetica 7 bold").pack(side=tk.LEFT, padx=10)
         tk.Button(button_frame, text="Stop Sniffing", command=self.stop_sniffing, width=15, font="Helvetica 7 bold").pack(side=tk.LEFT, padx=10)
+
+        # Legend
+        legend_frame = ttk.Frame(root)
+        legend_frame.pack(pady=5)
+        tk.Label(legend_frame, text="Legend: ", font=('Helvetica', 12)).pack(side=tk.LEFT)
+        tk.Label(legend_frame, text="NSFW", bg="red", font=('Helvetica', 12), width=10).pack(side=tk.LEFT, padx=5)
+        tk.Label(legend_frame, text="ADS", bg="orange", font=('Helvetica', 12), width=10).pack(side=tk.LEFT, padx=5)
+        tk.Label(legend_frame, text="SAFE", bg="green", font=('Helvetica', 12), width=10).pack(side=tk.LEFT, padx=5)
 
     def populate_interfaces(self):
         try:
@@ -64,7 +71,8 @@ class PacketSnifferApp:
             return
         print(f"Start Sniffing clicked on interface: {selected_interface}")
         self.should_we_stop.clear()
-        self.sniffing_thread = threading.Thread(target=start_sniffing, args=(self.packet_queue, self.should_we_stop, selected_interface), daemon=True)
+        self.sniffer = PacketSniffer(self.packet_queue, self.should_we_stop, selected_interface)
+        self.sniffing_thread = threading.Thread(target=self.sniffer.start_sniffing, daemon=True)
         self.sniffing_thread.start()
         self.root.after(100, self.update_treeview)
 
@@ -75,9 +83,14 @@ class PacketSnifferApp:
     def update_treeview(self):
         while not self.packet_queue.empty():
             packet = self.packet_queue.get()
-            self.treev.insert('', 'end', values=(packet["domain_ip"], packet["domain_name"]))
+            flag_color = {"NSFW": "red", "ADS": "orange", "SAFE": "green"}[packet["flag"]]
+            self.treev.insert('', 'end', values=(packet["domain_ip"], packet["domain_name"], packet["flag"]),
+                              tags=(packet["flag"],))
+            self.treev.tag_configure(packet["flag"], background=flag_color)
         if not self.should_we_stop.is_set():
             self.root.after(100, self.update_treeview)
+
+
 
 
 if __name__ == "__main__":

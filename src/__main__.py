@@ -1,12 +1,12 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk
 import threading
 from dns_resolver_interface import DomainBlockerApp
 from sniffer_interface import PacketSnifferApp
 from domain_fetch_module import DomainUpdater
 from configuration_module import ConfigHandler
 from configuration_interface import ConfigurationInterface
-from dns_resolver_module import DNSServer  
+from dns_resolver_module import DNSServer
 from dashboard_interface import DashboardApp
 
 def main():
@@ -23,53 +23,64 @@ def main():
         update_thread.start()
 
     root = tk.Tk()
-    root.title("Network Tools")
-    root.geometry("1300x700")
+    root.title("DNS Filter")
+    root.geometry("1300x800")
+    root.config(bg="#F4F6F9")  # Light background for the entire app
 
-    sidebar = tk.Frame(root, width=200, bg="lightgray")
-    sidebar.pack(side="left", fill="y")
+    # Sidebar Frame
+    sidebar = tk.Frame(root, width=250, bg="#4CAF50")
+    sidebar.pack(side="left", fill="y", padx=5, pady=5)
 
-    content_frame = tk.Frame(root)
-    content_frame.pack(side="right", fill="both", expand=True)
+    # Content Frame
+    content_frame = tk.Frame(root, bg="#F4F6F9")
+    content_frame.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 
     frames = {}
 
     def switch_frame(frame_name):
         for name, frame in frames.items():
-            frame.pack_forget()  
+            frame.pack_forget()
         frames[frame_name].pack(fill="both", expand=True)
 
-    dashboard_frame = tk.Frame(content_frame)
+    # Initialize the individual frame content
+    dashboard_frame = tk.Frame(content_frame, bg="#F4F6F9")
     DashboardApp(dashboard_frame, config_handler, dns_server)
     frames["Dashboard"] = dashboard_frame
 
-    sniffer_frame = tk.Frame(content_frame)
-    PacketSnifferApp(sniffer_frame)  
-    frames["Packet Sniffer"] = sniffer_frame
+    sniffer_frame = tk.Frame(content_frame, bg="#F4F6F9")
+    PacketSnifferApp(sniffer_frame)
+    frames["Live Packet View"] = sniffer_frame
 
-    blocker_frame = tk.Frame(content_frame)
-    DomainBlockerApp(blocker_frame, dns_server) 
+    blocker_frame = tk.Frame(content_frame, bg="#F4F6F9")
+    DomainBlockerApp(blocker_frame, dns_server)
     frames["Domain Blocker"] = blocker_frame
 
-    config_frame = tk.Frame(content_frame)
-    ConfigurationInterface(config_frame, config_handler) 
+    config_frame = tk.Frame(content_frame, bg="#F4F6F9")
+    ConfigurationInterface(config_frame, config_handler)
     frames["Configuration"] = config_frame
 
-
+    # Create buttons for sidebar
+    def create_button(text, command):
+        button = ttk.Button(sidebar, text=text, command=command, style="Sidebar.TButton")
+        button.pack(fill="x", pady=15, padx=20)
+        return button
 
     buttons = {
         "Dashboard": lambda: switch_frame("Dashboard"),
-        "Packet Sniffer": lambda: switch_frame("Packet Sniffer"),
+        "Live Packet View": lambda: switch_frame("Live Packet View"),
         "Domain Blocker": lambda: switch_frame("Domain Blocker"),
         "Configuration": lambda: switch_frame("Configuration"),
     }
 
-    for idx, (text, command) in enumerate(buttons.items()):
-        btn = tk.Button(sidebar, text=text, command=command, bg="white", fg="black")
-        btn.pack(fill="x", pady=5, padx=10)
+    for text, command in buttons.items():
+        create_button(text, command)
 
+    # Sidebar Button Style
+    style = ttk.Style()
+    style.configure("Sidebar.TButton", font=("Segoe UI", 14), padding=8, relief="flat", background="#4CAF50", foreground="white")
+    style.map("Sidebar.TButton", background=[("active", "#45a049")])
 
-
+    # Start with the Dashboard frame
     switch_frame("Dashboard")
 
     root.mainloop()

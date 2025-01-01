@@ -45,7 +45,7 @@ class DashboardApp:
 
         blocker_frame = ttk.Frame(summary_frame, relief=tk.RIDGE, padding=10)
         blocker_frame.grid(row=0, column=0, padx=10, sticky=tk.W)
-        ttk.Label(blocker_frame, text="Blocker State", font=("Arial", 14, "bold")).pack()
+        ttk.Label(blocker_frame, text="Blocker", font=("Arial", 14, "bold")).pack()
         self.blocker_state_label = ttk.Label(
             blocker_frame, text=self.get_blocker_state_text()[0], font=("Arial", 12)
         )
@@ -153,6 +153,7 @@ class DashboardApp:
             return "Enabled", "green"
         else:
             return "Disabled", "red"
+
 
 if __name__ == "__main__":
     root = tk.Tk()
