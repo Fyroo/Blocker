@@ -2,7 +2,7 @@ import json
 import os
 
 class ConfigHandler:
-    def __init__(self, config_file="Blocker/data/config.json"):
+    def __init__(self, config_file="data/config.json"):
         self.config_file = config_file
         self.default_config = {
             "upstream_dns": {
@@ -30,7 +30,7 @@ class ConfigHandler:
             print("Configuration file not found. Creating a new one with default values.")
             self.config = self.default_config.copy()  
             self.save_config()  
-            return self.config  # Return default config
+            return self.config  
 
     def save_config(self):
         try:

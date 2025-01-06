@@ -3,8 +3,8 @@ from tkinter import ttk
 import threading
 from queue import Queue
 from threading import Event
-from sniffer_module import PacketSniffer  # Assuming the PacketSniffer class is in packet_sniffer.py
-from interface_list_module import list_interfaces  # If this is a custom module for listing interfaces
+from sniffer_module import PacketSniffer  
+from interface_list_module import list_interfaces  
 
 
 class PacketSnifferApp:
@@ -47,7 +47,6 @@ class PacketSnifferApp:
         tk.Button(button_frame, text="Start Sniffing", command=self.start_sniffing, width=15, font="Helvetica 7 bold").pack(side=tk.LEFT, padx=10)
         tk.Button(button_frame, text="Stop Sniffing", command=self.stop_sniffing, width=15, font="Helvetica 7 bold").pack(side=tk.LEFT, padx=10)
 
-        # Legend
         legend_frame = ttk.Frame(root)
         legend_frame.pack(pady=5)
         tk.Label(legend_frame, text="Legend: ", font=('Helvetica', 12)).pack(side=tk.LEFT)

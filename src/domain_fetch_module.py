@@ -5,7 +5,7 @@ import time
 class DomainUpdater:
     def __init__(self, auto_update=True):
         self.auto_update = auto_update
-        self.data_directory = os.path.join("Blocker", "data")
+        self.data_directory = os.path.join("data")
         os.makedirs(self.data_directory, exist_ok=True)
 
         self.ads_url = "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/multi.txt"

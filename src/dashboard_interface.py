@@ -17,7 +17,11 @@ class DashboardApp:
         self.total_queries = self.dns_server.total_monthly_queries
         self.blocked_queries = self.dns_server.monthly_blocks
         self.total_domains_blocked = len(self.dns_server.blocked_domains)
-        self.percentage_blocked = (self.blocked_queries / self.total_queries) * 100
+        if self.total_queries == 0 :
+            self.percentage_blocked =100
+        else:
+            self.percentage_blocked = (self.blocked_queries / self.total_queries) * 100
+
         self.upstream_server = tk.StringVar(value=self.config_handler.config["upstream_dns"]["name"])
         self.server_state = self.dns_server.is_run
         self.blocker_state = self.dns_server.blocking_enabled
@@ -89,7 +93,9 @@ class DashboardApp:
         blocked = self.blocked_queries
         allowed = self.total_queries - blocked
         labels = ["Blocked Queries", "Allowed Queries"]
-        sizes = [blocked, allowed]
+        sizes = [0, 1]
+        if blocked != 0 or allowed != 0 :
+            sizes = [blocked, allowed]
         colors = ["red", "green"]
 
         self.pie1.clear()
@@ -139,7 +145,6 @@ class DashboardApp:
             text=self.get_server_status_text()[0], foreground=self.get_server_status_text()[1]
         )
 
-        # Recurse the update every second
         self.root.after(1000, self.update_stats)
 
     def get_server_status_text(self):

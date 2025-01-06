@@ -69,14 +69,25 @@ The server will start listening on `127.0.0.1:53` and will block any domains lis
 ## Project Structure
 
 ```
-blocker/
-├── requirements.txt             # Dependency file
-├── blocker/                     # Source code
-│   ├── dns_server.py            # Main DNS server logic
-├── data/                        # Directory containing blocklist
-│   └── *_domains.txt            # List of domains to block
-├── README.md                    # Project documentation
-└── ...
+└── 📂 Blocker/
+│  └── 📂 data/
+│    ├── 📄 ads_domains.txt
+│    ├── 📄 config.json
+│    ├── 📄 nsfw_domains.txt
+├── 📄 README.md
+└── 📂 data/
+├── 📄 requirements.txt
+└── 📂 src/
+│  ├── 📄 __main__.py
+│  ├── 📄 configuration_interface.py
+│  ├── 📄 configuration_module.py
+│  ├── 📄 dashboard_interface.py
+│  ├── 📄 dns_resolver_interface.py
+│  ├── 📄 dns_resolver_module.py
+│  ├── 📄 domain_fetch_module.py
+│  ├── 📄 interface_list_module.py
+│  ├── 📄 sniffer_interface.py
+│  └── 📄 sniffer_module.py
 ```
 
 ## How It Works

@@ -23,15 +23,12 @@ def main():
         update_thread.start()
 
     root = tk.Tk()
-    root.title("DNS Filter")
-    root.geometry("1300x800")
-    root.config(bg="#F4F6F9")  # Light background for the entire app
+    root.title("Blocker")
+    root.config(bg="#F4F6F9")
 
-    # Sidebar Frame
     sidebar = tk.Frame(root, width=250, bg="#4CAF50")
     sidebar.pack(side="left", fill="y", padx=5, pady=5)
 
-    # Content Frame
     content_frame = tk.Frame(root, bg="#F4F6F9")
     content_frame.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 
@@ -42,7 +39,6 @@ def main():
             frame.pack_forget()
         frames[frame_name].pack(fill="both", expand=True)
 
-    # Initialize the individual frame content
     dashboard_frame = tk.Frame(content_frame, bg="#F4F6F9")
     DashboardApp(dashboard_frame, config_handler, dns_server)
     frames["Dashboard"] = dashboard_frame
@@ -59,7 +55,6 @@ def main():
     ConfigurationInterface(config_frame, config_handler)
     frames["Configuration"] = config_frame
 
-    # Create buttons for sidebar
     def create_button(text, command):
         button = ttk.Button(sidebar, text=text, command=command, style="Sidebar.TButton")
         button.pack(fill="x", pady=15, padx=20)
@@ -75,12 +70,10 @@ def main():
     for text, command in buttons.items():
         create_button(text, command)
 
-    # Sidebar Button Style
     style = ttk.Style()
     style.configure("Sidebar.TButton", font=("Segoe UI", 14), padding=8, relief="flat", background="#4CAF50", foreground="white")
     style.map("Sidebar.TButton", background=[("active", "#45a049")])
 
-    # Start with the Dashboard frame
     switch_frame("Dashboard")
 
     root.mainloop()
