@@ -22,6 +22,7 @@ Ensure your system meets the following requirements:
 
 - **Python**: Version 3.x.
 - **Privileges**: Administrative/root access for DNS configuration.
+- **Npcap**: latest version(for Windows only)
 
 ## Installation and Setup
 
