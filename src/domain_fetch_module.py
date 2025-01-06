@@ -3,7 +3,8 @@ import os
 import time
 
 class DomainUpdater:
-    def __init__(self, auto_update=True):
+    def __init__(self, logger,auto_update=True):
+        self.system_logger = logger.system_logger  
         self.auto_update = auto_update
         self.data_directory = os.path.join("data")
         os.makedirs(self.data_directory, exist_ok=True)
@@ -31,13 +32,13 @@ class DomainUpdater:
             with open(nsfw_file, "w") as file:
                 file.writelines(f"{domain}\n" for domain in nsfw_list)
 
-            print("Domain lists updated successfully.")
+            self.system_logger.info("Domain lists updated successfully.")
 
         except requests.RequestException as e:
-            print(f"Error fetching domain lists: {e}")
+            self.system_logger.error(f"Error fetching domain lists: {e}")
 
     def update_loop(self):
         while self.auto_update:
-            print("Updating domain lists...")
+            self.system_logger.info("Updating domain lists...")
             self.fetch_domains()
             time.sleep(60*60*2)  

@@ -8,8 +8,10 @@ import json
 import time
 
 class DNSServer:
-    def __init__(self, config_handler: ConfigHandler):
+    def __init__(self, config_handler: ConfigHandler, logger):
         self.config_handler = config_handler
+        self.system_logger = logger.system_logger  
+        self.traffic_logger = logger.traffic_logger
         self.lastqname = None
         self.config_file = "data/config.json"
         try:
@@ -18,9 +20,9 @@ class DNSServer:
                 self.whitelist = set(self.config.get("whitelist", [])) 
                 self.blacklist = set(self.config.get("blacklist", [])) 
                 self.upstream_dns = self.config.get("upstream_dns", {}).get("address", "8.8.8.8")
-                print(f"Loaded configuration: {self.config}")
+                self.system_logger.info(f"Loaded configuration: {self.config}")
         except Exception as e:
-            print(f"Error loading configuration: {e}")
+            self.system_logger.error(f"Error loading configuration: {e}")
             self.config = {}
 
         self.blocked_domains = self.blacklist.copy()
@@ -50,9 +52,9 @@ class DNSServer:
                     self.daily_blocks = data.get('daily_blocks', 0)
                     self.monthly_blocks = data.get('monthly_blocks', 0)
                     self.total_monthly_queries = data.get('total_monthly_queries', 0)
-                    print(f"Loaded counts: Daily: {self.daily_blocks}, Monthly: {self.monthly_blocks}, Total Monthly Queries: {self.total_monthly_queries}")
+                    self.system_logger.info(f"Loaded counts: Daily: {self.daily_blocks}, Monthly: {self.monthly_blocks}, Total Monthly Queries: {self.total_monthly_queries}")
             except Exception as e:
-                print(f"Error loading statistics: {e}")
+                self.system_logger.error(f"Error loading statistics: {e}")
 
     def save_counts(self):
         try:
@@ -63,9 +65,10 @@ class DNSServer:
             }
             with open(self.save_file, 'w') as f:
                 json.dump(data, f, indent=4)
-            print(f"Saved counts: Daily: {self.daily_blocks}, Monthly: {self.monthly_blocks}, Total Monthly Queries: {self.total_monthly_queries}")
+            self.system_logger.info(f"Saved counts: Daily: {self.daily_blocks}, Monthly: {self.monthly_blocks}, Total Monthly Queries: {self.total_monthly_queries}")
         except Exception as e:
-            print(f"Error saving statistics: {e}")
+            self.system_logger.error(f"Error saving statistics: {e}")
+
     def load_blocklist(self, file_path):
         blocklist = set()
         try:
@@ -74,11 +77,11 @@ class DNSServer:
                     domain = line.strip()
                     if domain:
                         blocklist.add(domain)
-            print(f"Loaded {len(blocklist)} domains from {file_path}")
+            self.system_logger.info(f"Loaded {len(blocklist)} domains from {file_path}")
         except FileNotFoundError:
-            print(f"Blocklist file not found: {file_path}")
+            self.system_logger.warning(f"Blocklist file not found: {file_path}")
         except Exception as e:
-            print(f"Error loading blocklist: {e}")
+            self.system_logger.error(f"Error loading blocklist: {e}")
         return blocklist
 
     def update_blocklist(self, categories):
@@ -89,10 +92,9 @@ class DNSServer:
                 if blocklist:
                     self.blocked_domains.update(blocklist)
                 else:
-                    print(f"No domains loaded for category: {category}")
-        print(f"Total domains to block: {len(self.blocked_domains)}")
+                    self.system_logger.warning(f"No domains loaded for category: {category}")
+        self.system_logger.info(f"Total domains to block: {len(self.blocked_domains)}")
 
-    
     def start_saving_thread(self):
         def save_periodically():
             while True:
@@ -117,17 +119,17 @@ class DNSServer:
         self.total_monthly_queries += 1
         qname = str(query.q.qname).rstrip('.')
         qname = qname.removeprefix('www.')
-        print(f"Received query: {qname}")
+        self.traffic_logger.info(f"Received query: {qname}")
 
         if qname in self.whitelist:
-            print(f"Domain whitelisted: {qname}")
+            self.traffic_logger.info(f"Domain whitelisted: {qname}")
             return self.forward_query(query)    
 
         if qname in self.blocked_domains and self.blocking_enabled:
             if self.lastqname != qname:
                 self.daily_blocks += 1
                 self.monthly_blocks += 1
-            print(f"Blocked domain: {qname}")
+            self.traffic_logger.info(f"Blocked domain: {qname}")
 
             response = dnslib.DNSRecord(
                 dnslib.DNSHeader(id=query.header.id, qr=1, aa=1, ra=1),
@@ -144,7 +146,7 @@ class DNSServer:
             )
             self.lastqname = qname
             return response
-        print(f"Resolved domain with: {self.upstream_dns}")
+        self.traffic_logger.info(f"Resolved domain with: {self.upstream_dns}")
         return self.forward_query(query)
 
     def forward_query(self, query):
@@ -155,7 +157,7 @@ class DNSServer:
             data, _ = sock.recvfrom(4096)
             return dnslib.DNSRecord.parse(data)
         except Exception as e:
-            print(f"Error forwarding query: {e}")
+            self.system_logger.error(f"Error forwarding query: {e}")
             return None
         finally:
             sock.close()
@@ -167,11 +169,11 @@ class DNSServer:
             if response:
                 self.sock.sendto(response.pack(), addr)
         except Exception as e:
-            print(f"Error handling request: {e}")
+            self.system_logger.error(f"Error handling request: {e}")
 
     def run(self):
-        print(f"DNS Server running on 127.0.0.1:53")
-        print(f"Blocking {len(self.blocked_domains)} domains.")
+        self.system_logger.info(f"DNS Server running on 127.0.0.1:53")
+        self.system_logger.info(f"Blocking {len(self.blocked_domains)} domains.")
         self.is_run = True
         while True:
             try:
@@ -181,4 +183,4 @@ class DNSServer:
                     args=(data, addr)
                 ).start()
             except Exception as e:
-                print(f"Server error: {e}")
+                self.system_logger.error(f"Server error: {e}")

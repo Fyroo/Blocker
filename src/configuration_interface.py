@@ -12,12 +12,13 @@ class ConfigurationInterface:
         "OpenDNS": "208.67.222.222",
     }
 
-    def __init__(self, root, config_handler):
+    def __init__(self, root,logger, config_handler):
         self.root = root
+        self.logger=logger
         self.config_handler = config_handler
         label = ttk.Label(self.root, text="Configuration", font=("Arial", 18, "bold"))
         label.pack(pady=20)
-        self.DomainUpdater = DomainUpdater()
+        self.DomainUpdater = DomainUpdater(self.logger)
         self.auto_update = tk.BooleanVar(value=self.config_handler.config.get("auto_update", True))
         self.upstream_dns_name = tk.StringVar(value=self.config_handler.config["upstream_dns"]["name"])
         self.upstream_dns_address = tk.StringVar(value=self.config_handler.config["upstream_dns"]["address"])
@@ -112,11 +113,11 @@ class ConfigurationInterface:
             messagebox.showerror("Update Failed", f"Error updating domain list: {e}")
 
 
-if __name__ == "__main__":
-    from config_handler import ConfigHandler
-
-    root = tk.Tk()
-    config_handler = ConfigHandler()
-    app = ConfigurationInterface(root, config_handler)
-    root.geometry("800x600")  
-    root.mainloop()
+#if __name__ == "__main__":
+#    from config_handler import ConfigHandler
+#
+#    root = tk.Tk()
+#    config_handler = ConfigHandler()
+#    app = ConfigurationInterface(root, config_handler)
+#    root.geometry("800x600")  
+#    root.mainloop()
