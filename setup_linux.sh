@@ -14,7 +14,6 @@ fi
 echo "Installing dependencies..."
 # Activate virtual environment
 source venv/bin/activate
-pip install --upgrade pip
 pip install -r requirements.txt
 deactivate
 echo "Setup completed successfully!"
