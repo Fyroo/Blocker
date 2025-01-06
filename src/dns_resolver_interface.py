@@ -73,9 +73,7 @@ class DomainBlockerApp:
         messagebox.showinfo("Info", "Blocking Disabled. All queries will resolve through upstream DNS.")
 
 
-if __name__ == "__main__":
-
-
-    root = tk.Tk()
-    app = DomainBlockerApp(root, server)
-    root.mainloop()
+#if __name__ == "__main__":
+#    root = tk.Tk()
+#    app = DomainBlockerApp(root, server)
+#    root.mainloop()

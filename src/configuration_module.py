@@ -1,8 +1,9 @@
 import json
 import os
 
-class ConfigHandler:
-    def __init__(self, config_file="data/config.json"):
+class ConfigHandler():
+    def __init__(self, logger,config_file="data/config.json"):
+        self.system_logger = logger.system_logger  
         self.config_file = config_file
         self.default_config = {
             "upstream_dns": {
@@ -21,13 +22,13 @@ class ConfigHandler:
             try:
                 with open(self.config_file, 'r') as f:
                     config = json.load(f)
-                    print(f"Loaded configuration: {config}")
+                    self.system_logger.info(f"Loaded configuration: {config}")
                     return config
             except Exception as e:
-                print(f"Error loading configuration: {e}")
+                self.system_logger.error(f"Error loading configuration: {e}")
                 return self.default_config.copy()  
         else:
-            print("Configuration file not found. Creating a new one with default values.")
+            self.system_logger.warn("Configuration file not found. Creating a new one with default values.")
             self.config = self.default_config.copy()  
             self.save_config()  
             return self.config  
@@ -37,9 +38,9 @@ class ConfigHandler:
             os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
             with open(self.config_file, 'w') as f:
                 json.dump(self.config, f, indent=4)
-            print(f"Configuration saved: {self.config}")
+            self.system_logger.info(f"Configuration saved: {self.config}")
         except Exception as e:
-            print(f"Error saving configuration: {e}")
+            self.system_logger.error(f"Error saving configuration: {e}")
 
 
     def update_config(self, key, value):
@@ -50,7 +51,7 @@ class ConfigHandler:
         elif key == "custom_dns":
             self.config["custom_dns"] = value
         else:
-            print(f"Invalid configuration key: {key}")
+            self.system_logger.warn(f"Invalid configuration key: {key}")
         self.save_config()
 
 

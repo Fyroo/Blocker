@@ -160,7 +160,7 @@ class DashboardApp:
             return "Disabled", "red"
 
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = DashboardApp(root)
-    root.mainloop()
+#if __name__ == "__main__":
+#    root = tk.Tk()
+#    app = DashboardApp(root)
+#    root.mainloop()

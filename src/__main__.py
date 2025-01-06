@@ -9,20 +9,23 @@ from configuration_module import ConfigHandler
 from configuration_interface import ConfigurationInterface
 from dns_resolver_module import DNSServer
 from dashboard_interface import DashboardApp
-
+from logger_module import Logger
 def main():
-    dns_manager = DNSManager()
+
+    logger = Logger()
+
+    dns_manager = DNSManager(logger)
     dns_thread = threading.Thread(target=dns_manager.set_dns, daemon=True)
     dns_thread.start()
     dns_manager.wait_for_dns_ready()
 
-    config_handler = ConfigHandler()
+    config_handler = ConfigHandler(logger)
     
-    dns_server = DNSServer(config_handler)
+    dns_server = DNSServer(config_handler,logger)
     dns_server.update_blocklist([])
 
     auto_update = config_handler.config.get("auto_update", True)
-    domain_updater = DomainUpdater(auto_update=auto_update)
+    domain_updater = DomainUpdater(logger,auto_update=auto_update)
 
     if auto_update:
         update_thread = threading.Thread(target=domain_updater.update_loop, daemon=True)
@@ -58,7 +61,7 @@ def main():
     frames["Domain Blocker"] = blocker_frame
 
     config_frame = tk.Frame(content_frame, bg="#F4F6F9")
-    ConfigurationInterface(config_frame, config_handler)
+    ConfigurationInterface(config_frame,logger, config_handler)
     frames["Configuration"] = config_frame
 
     def create_button(text, command):

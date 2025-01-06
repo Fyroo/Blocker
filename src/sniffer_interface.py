@@ -6,7 +6,6 @@ from threading import Event
 from sniffer_module import PacketSniffer  
 from interface_list_module import list_interfaces  
 
-
 class PacketSnifferApp:
     def __init__(self, root):
         self.root = root
@@ -29,6 +28,8 @@ class PacketSnifferApp:
         self.interface_var = tk.StringVar()
         self.interface_dropdown = ttk.Combobox(root, textvariable=self.interface_var, state="readonly", font=('Helvetica', 12))
         self.interface_dropdown.pack(pady=5)
+
+        self.interface_dropdown.bind("<<ComboboxSelected>>", self.on_interface_change)
 
         self.populate_interfaces()
 
@@ -59,9 +60,17 @@ class PacketSnifferApp:
             interfaces = list_interfaces()  
             self.interface_dropdown['values'] = interfaces
             if interfaces:
-                self.interface_dropdown.current(0)  
+                self.interface_dropdown.current(0)  # Select the first interface by default
         except Exception as e:
             print(f"Error fetching interfaces: {e}")
+
+    def on_interface_change(self, event=None):
+        # Clear the packet list when the interface is changed
+        self.clear_packet_list()
+
+    def clear_packet_list(self):
+        for item in self.treev.get_children():
+            self.treev.delete(item)
 
     def start_sniffing(self):
         selected_interface = self.interface_var.get()
@@ -89,10 +98,7 @@ class PacketSnifferApp:
         if not self.should_we_stop.is_set():
             self.root.after(100, self.update_treeview)
 
-
-
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = PacketSnifferApp(root)
-    root.mainloop()
+# If __name__ == "__main__":
+#     root = tk.Tk()
+#     app = PacketSnifferApp(root)
+#     root.mainloop()
