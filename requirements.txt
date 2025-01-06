@@ -1,4 +1,3 @@
-PyQt6
 tk
 scapy
 requests
