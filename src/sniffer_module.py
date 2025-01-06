@@ -7,8 +7,8 @@ class PacketSniffer:
         self.stop_event = stop_event
         self.selected_interface = selected_interface
         self.blocklist_files = {
-            "ADS": "Blocker/data/ads_domains.txt",
-            "NSFW": "Blocker/data/nsfw_domains.txt",
+            "ADS": "data/ads_domains.txt",
+            "NSFW": "data/nsfw_domains.txt",
         }
         self.blocklists = self.load_blocklists()
 

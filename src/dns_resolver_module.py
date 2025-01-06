@@ -11,7 +11,7 @@ class DNSServer:
     def __init__(self, config_handler: ConfigHandler):
         self.config_handler = config_handler
         self.lastqname = None
-        self.config_file = "Blocker/data/config.json"
+        self.config_file = "data/config.json"
         try:
             with open(self.config_file, 'r') as f:
                 self.config = json.load(f)
@@ -27,15 +27,15 @@ class DNSServer:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(('127.0.0.1', 53))
         self.blocklist_files = {
-            "ADS": "Blocker/data/ads_domains.txt",
-            "NSFW": "Blocker/data/nsfw_domains.txt",
+            "ADS": "data/ads_domains.txt",
+            "NSFW": "data/nsfw_domains.txt",
         }
         self.daily_blocks = 0
         self.monthly_blocks = 0
         self.total_monthly_queries = 0
         self.last_reset_date = datetime.now()
 
-        self.save_file = "Blocker/data/statistics.json"
+        self.save_file = "data/statistics.json"
         self.blocking_enabled = False  
 
         self.load_counts()
@@ -67,7 +67,6 @@ class DNSServer:
         except Exception as e:
             print(f"Error saving statistics: {e}")
     def load_blocklist(self, file_path):
-        """Load blocklist from a file."""
         blocklist = set()
         try:
             with open(file_path, "r") as f:
