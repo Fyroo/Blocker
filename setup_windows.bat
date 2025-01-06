@@ -22,7 +22,7 @@ call venv\Scripts\activate
 
 :: Install dependencies
 pip install --upgrade pip
-pip install -r src\requirements.txt
+pip install -r requirements.txt
 deactivate
 echo Setup completed successfully!
 exit /b
