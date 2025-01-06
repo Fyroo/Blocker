@@ -28,9 +28,31 @@ class DNSManager:
         finally:
             self.dns_ready_event.set()
 
+    def get_connected_interfaces():
+        process = subprocess.run('netsh interface show interface', stdout=subprocess.PIPE)
+        if process.returncode != 0:
+            print('Error fetching interfaces, aborting.')
+            exit(1)
+        output = process.stdout.decode()
+        lines = output.split('\r\n')[3:-2]
+        connected_interfaces = []
+        for line in lines:
+            properties = line.split()
+            interface_admin_state = properties[0]
+            interface_state = properties[1]
+            interface_type = properties[2]
+            interface_name = properties[3]
+            if interface_state == 'Connected':
+                connected_interfaces.append(interface_name)
+        return connected_interfaces
+   
     def set_dns_windows(self):
+        connected_interfaces = get_connected_interfaces()
+        if len(connected_interfaces) == 0:
+            print('No network connected interfaces present, aborting.')
+            exit(1)
         try:
-            subprocess.run(['netsh', 'interface', 'ipv4', 'set', 'dns', 'name="Ethernet"', 'static', '127.0.0.1'], check=True)
+            subprocess.run([f'netsh interface ip set dns name="{first_connected_interface}" static 127.0.0.1'], check=True)
             print("DNS server set to 127.0.0.1 on Windows.")
         except subprocess.CalledProcessError:
             print("Failed to set DNS server on Windows. Please ensure you have the necessary permissions.")
@@ -62,7 +84,16 @@ class DNSManager:
             print(f"An unexpected error occurred: {e}")
 
     def reset_default_server_on_destroy_windows(self):
-        print('destroy')
+        connected_interfaces = get_connected_interfaces()
+        if len(connected_interfaces) == 0:
+            print('No network connected interfaces present, aborting.')
+            exit(1)
+        first_connected_interface = connected_interfaces[0]
+        process = subprocess.run(f'netsh interface ip set dns name="{first_connected_interface}" dhcp', stdout=subprocess.PIPE)
+        if process.returncode != 0:
+            print(process.stdout.decode())
+            print('Error while resetting DNS, aborting.')
+            exit(1)
         
     def reset_dns(self):
         try:
