@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import threading
+from setdns_module import DNSManager
 from dns_resolver_interface import DomainBlockerApp
 from sniffer_interface import PacketSnifferApp
 from domain_fetch_module import DomainUpdater
@@ -10,6 +11,11 @@ from dns_resolver_module import DNSServer
 from dashboard_interface import DashboardApp
 
 def main():
+    dns_manager = DNSManager()
+    dns_thread = threading.Thread(target=dns_manager.set_dns, daemon=True)
+    dns_thread.start()
+    dns_manager.wait_for_dns_ready()
+
     config_handler = ConfigHandler()
     
     dns_server = DNSServer(config_handler)
@@ -76,7 +82,13 @@ def main():
 
     switch_frame("Dashboard")
 
-    root.mainloop()
+    
+    def on_closing():
+        print("Closing application...")
+        dns_manager.reset_dns() 
+        root.destroy()
 
+    root.protocol("WM_DELETE_WINDOW", on_closing)
+    root.mainloop()
 if __name__ == "__main__":
     main()
