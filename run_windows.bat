@@ -1,4 +1,10 @@
 @echo off
+NET SESSION >nul 2>&1
+if %ERRORLEVEL% NEQ 0 (
+    echo You need to run this script as Administrator.
+    pause
+    exit /b
+)
 :: Check if virtual environment exists
 if not exist "venv" (
     echo "Setup not completed. Running setup script..."

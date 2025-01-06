@@ -82,7 +82,13 @@ def main():
 
     switch_frame("Dashboard")
 
-    root.mainloop()
+    
+    def on_closing():
+        print("Closing application...")
+        dns_manager.reset_dns() 
+        root.destroy()
 
+    root.protocol("WM_DELETE_WINDOW", on_closing)
+    root.mainloop()
 if __name__ == "__main__":
     main()
