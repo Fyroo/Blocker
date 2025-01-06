@@ -1,16 +1,27 @@
-````markdown
-# 🛑 Blocker - DNS Blocker Server
+# 🔴 Blocker - DNS Blocker Server
 
 ## Overview
 
-**Blocker** is a DNS server designed to block specific domains (e.g., ads, malware, adult content) by redirecting them to a local address (e.g., `127.0.0.1`). The server allows you to maintain a custom blocklist and provides fallback resolution via upstream DNS servers like Google DNS when the domain is not blocked. This is particularly useful for network filtering, parental control, and privacy enhancement.
+**Blocker** is a Python-based DNS server designed to block specific domains (e.g., ads, malware, adult content) by redirecting them to a local address (`127.0.0.1`). The program provides:
+
+- **Custom Blocklist Management**: Easily add or update blocked domains.
+- **Platform Support**: Works on Linux and Windows.
+- **DNS Fallback**: Forwards unresolved domains to upstream DNS servers like Google DNS (`8.8.8.8`).
+- **Network Packet Sniffer**: Monitors DNS queries for improved diagnostics.
+
+## Features
+
+- **Customizable Blocklists**
+- **Logs for Debugging**
+- **Platform-Specific DNS Setup**
+- **Configurable via GUI**
 
 ## Prerequisites
 
-Before you start, ensure that your environment is ready:
+Ensure your system meets the following requirements:
 
-- **Python**: Python 3.x is required.
-- **Virtual Environment**: It is recommended to use a virtual environment for dependency management.
+- **Python**: Version 3.x.
+- **Privileges**: Administrative/root access for DNS configuration.
 
 ## Installation and Setup
 
@@ -18,92 +29,124 @@ Before you start, ensure that your environment is ready:
 
 ```bash
 git clone https://github.com/Fyroo/Blocker.git
-cd blocker
+cd Blocker
 ```
-````
 
-### 2. Set Up a Virtual Environment
+### 2. Start the Program
 
-Create and activate a virtual environment to manage your dependencies:
+**Linux**:
 
 ```bash
-python -m venv venv
+bash run_linux.sh
 ```
 
-- For Linux/macOS:
+**Windows**:
+
+```cmd
+run_windows.bat
+```
+
+If setup hasn’t been completed, the `run` scripts will automatically invoke the appropriate `setup` script.
+
+## Configuration
+
+### Blocklist Management
+
+The blocklist files are located in the `data/` directory:
+
+- `nsfw_domains.txt`: Block adult content.
+- `ads_domains.txt`: Block ads and trackers.
+
+To add a domain, simply append it to the relevant file, one domain per line.
+
+### Logs
+
+Logs are stored in the `logs/` directory. These can be reviewed to troubleshoot issues or monitor activity.
+
+### GUI Configuration
+
+The GUI provides options to:
+
+- View and update blocklists.
+- view live dns traffic on disered interface
+- Adjust auto-update settings for blocklists.
+- Monitor DNS query activity.
+
+## How It Works
+
+1. **DNS Query Interception**: Captures incoming DNS queries.
+2. **Domain Filtering**: Checks the queried domain against the blocklist.
+3. **Blocking**: Returns `127.0.0.1` for blocked domains.
+4. **Forwarding**: Unblocked domains are forwarded to the upstream DNS server (`8.8.8.8` by default).
+
+## DNS Configuration
+
+### Linux
+
+The script modifies `/etc/resolv.conf` to use `127.0.0.1` as the primary DNS server:
 
 ```bash
-source venv/bin/activate
+nameserver 127.0.0.1
 ```
 
-- For Windows:
+**Note**: If `NetworkManager` or `systemd-resolved` overwrites this file, you may need to disable automatic DNS updates.
 
-```bash
-venv\Scripts\activate
+### Windows
+
+The script uses the `netsh` command to set `127.0.0.1` as the DNS server:
+
+```cmd
+netsh interface ip set dns "Local Area Connection" static 127.0.0.1
 ```
 
-### 3. Install Dependencies
+## Troubleshooting
 
-Install the required libraries using `pip`:
+### Chrome Secure DNS Issue
 
-```bash
-pip install -r requirements.txt
-```
+Chrome’s Secure DNS feature may bypass the local DNS server. To fix this:
 
-### 4. Configure the Blocklist
+1. Go to Chrome settings: `chrome://settings/`
+2. Navigate to **Privacy and security**.
+3. Disable **Use secure DNS** under **Security**.
 
-The server uses a `nsfw_domains.txt` file to maintain the list of domains to block. You can find this file under the `data` directory.
+### Permission Errors
 
-Each domain should be listed on a separate line. The server will check incoming DNS queries against this list and block matching domains.
+If you encounter permission errors, ensure you run the setup or run scripts with elevated privileges:
 
-### 5. Run the DNS Server
-
-Start the DNS server by running the following command:
-
-```bash
-python blocker/dns_server.py
-```
-
-The server will start listening on `127.0.0.1:53` and will block any domains listed in `domains.txt`. Any other domains will be forwarded to the configured upstream DNS server (Google DNS by default: `8.8.8.8`).
+- **Linux**: Use `sudo`.
+- **Windows**: Run the batch files as an administrator.
 
 ## Project Structure
 
 ```
-└── 📂 Blocker/
-│  └── 📂 data/
-│    ├── 📄 ads_domains.txt
-│    ├── 📄 config.json
-│    ├── 📄 nsfw_domains.txt
+. 📂 Blocker
 ├── 📄 README.md
-└── 📂 data/
+├── 📂 data/
+│   ├── ads_domains.txt
+│   ├── config.json
+│   ├── nsfw_domains.txt
+├── 📂 logs/
 ├── 📄 requirements.txt
-└── 📂 src/
-│  ├── 📄 __main__.py
-│  ├── 📄 configuration_interface.py
-│  ├── 📄 configuration_module.py
-│  ├── 📄 dashboard_interface.py
-│  ├── 📄 dns_resolver_interface.py
-│  ├── 📄 dns_resolver_module.py
-│  ├── 📄 domain_fetch_module.py
-│  ├── 📄 interface_list_module.py
-│  ├── 📄 sniffer_interface.py
-│  └── 📄 sniffer_module.py
+├── 📄 run_linux.sh
+├── 📄 run_windows.bat
+├── 📄 setup_linux.sh
+├── 📄 setup_windows.bat
+├── 📂 src/
+│   ├── __main__.py
+│   ├── configuration_interface.py
+│   ├── configuration_module.py
+│   ├── dashboard_interface.py
+│   ├── dns_resolver_interface.py
+│   ├── dns_resolver_module.py
+│   ├── domain_fetch_module.py
+│   ├── interface_list_module.py
+│   ├── logger_module.py
+│   ├── setdns_module.py
+│   ├── sniffer_interface.py
+│   ├── sniffer_module.py
+└── 📂 venv/
 ```
 
-## How It Works
+## Contributing
 
-1. **Domain Query**: When a DNS query is received, the server checks if the requested domain matches any in the blocklist (`*_domains.txt`).
-2. **Block Domain**: If the domain is found in the blocklist, the server responds with the IP `127.0.0.1`, effectively blocking the domain.
-3. **Forward to Upstream DNS**: If the domain is not in the blocklist, the server forwards the query to the configured upstream DNS server (e.g., `8.8.8.8`).
-
-## Known Issues
-
-### **Chrome Secure DNS Issue**
-
-If the server is not capturing DNS queries from Chrome, it may be due to Chrome's Secure DNS feature. To fix this:
-
-1. Open Chrome settings (`chrome://settings/`).
-2. Scroll to **Privacy and security**.
-3. Under **Security**, toggle off **Use secure DNS**.
-
-Disabling Secure DNS will allow the packet sniffer to capture packets properly.
+Feel free to submit issues or pull requests to improve this project. Contributions are welcome!
