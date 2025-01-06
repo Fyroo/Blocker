@@ -1,4 +1,5 @@
 @echo off
+
 :: Check if running as administrator
 whoami /groups | find "S-1-5-32-544" > nul
 if not %errorlevel%==0 (
@@ -16,12 +17,12 @@ if not exist "venv" (
 )
 
 :: Activate virtual environment
+echo Installing dependencies...
 call venv\Scripts\activate
 
 :: Install dependencies
-echo Installing dependencies...
 pip install --upgrade pip
-pip install -r requirements.txt
-
+pip install -r src\requirements.txt
+deactivate
 echo Setup completed successfully!
 exit /b

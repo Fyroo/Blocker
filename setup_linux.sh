@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Check if running as root
-
-
 # Create virtual environment
 if [ ! -d "venv" ]; then
     echo "Creating virtual environment..."
