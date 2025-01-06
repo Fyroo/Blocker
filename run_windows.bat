@@ -16,4 +16,5 @@ call venv\Scripts\activate
 
 :: Start the Python program
 python src\__main__.py
+deactivate
 exit /b

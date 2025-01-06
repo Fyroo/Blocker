@@ -18,10 +18,10 @@ if not exist "venv" (
 
 :: Activate virtual environment
 echo Installing dependencies...
+venv\Scripts\python.exe -m pip install --upgrade pip
 call venv\Scripts\activate
 
 :: Install dependencies
-pip install --upgrade pip
 pip install -r requirements.txt
 deactivate
 echo Setup completed successfully!

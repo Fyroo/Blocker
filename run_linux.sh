@@ -12,4 +12,5 @@ source venv/bin/activate
 
 # Start the Python program
 sudo python src/__main__.py
+deactivate
 exit
